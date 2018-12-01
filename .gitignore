@@ -26,3 +26,6 @@
 *.exe
 *.out
 *.app
+
+# Text-based inputs to challenges.
+*.input
