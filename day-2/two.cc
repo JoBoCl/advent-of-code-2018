@@ -1,7 +1,6 @@
 #include <fstream>
 #include <iostream>
 #include <map>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -16,18 +15,14 @@ void partOne() {
     while (getline(myfile, line)) {
       map<char, short> charCounts;
       for (char c : line) {
-        if (charCounts.count(c)) {
-          charCounts[c]++;
-        } else {
-          charCounts[c] = 1;
-        }
+        charCounts[c]++;
       }
       bool twoMatch = false;
       bool threeMatch = false;
 
-      for (char c : line) {
-        twoMatch = charCounts[c] == 2 || twoMatch;
-        threeMatch = charCounts[c] == 3 || threeMatch;
+      for (auto [c, count] : line) {
+        twoMatch = count == 2 || twoMatch;
+        threeMatch = count == 3 || threeMatch;
       }
       if (twoMatch) {
         twoLetterCount++;
@@ -38,18 +33,18 @@ void partOne() {
     }
   }
 
-  cout << "Two match count: " << to_string(twoLetterCount) << "\n";
-  cout << "Three match count: " << to_string(threeLetterCount) << "\n";
-  cout << "Checksum: " << to_string(twoLetterCount * threeLetterCount) << "\n";
+  cout << "Two match count: " << twoLetterCount << "\n";
+  cout << "Three match count: " << threeLetterCount << "\n";
+  cout << "Checksum: " << twoLetterCount * threeLetterCount << "\n";
 }
 
 void partTwo() {
-  std::set<string> lines;
+  std::vector<string> lines;
   std::ifstream myfile("2.input");
   if (myfile.is_open()) {
     string line;
     while (getline(myfile, line)) {
-      lines.insert(line);
+      lines.push_back(line);
     }
   }
 
