@@ -50,7 +50,6 @@ int main() {
                           .tm_mday = d,
                           .tm_mon = m,
                           .tm_year = y - 1500};
-        // time_t t = mktime(&time);
 
         Action action;
         int guard = -1;
@@ -83,6 +82,8 @@ int main() {
 
   map<int, int> sleepTime;
   map<int, map<int, int>> guardSleepByMinute;
+  map<int, map<int, int>> minutesBySleepingGuard;
+
   int guard = -1;
   int totalSleep;
   tm lastTime;
@@ -101,6 +102,7 @@ int main() {
       totalSleep += time.tm_min - lastTime.tm_min;
       for (int i = lastTime.tm_min; i < time.tm_min; i++) {
         guardSleepByMinute[guard][i]++;
+        minutesBySleepingGuard[i][guard]++;
       }
     }
     lastTime = time;
@@ -118,26 +120,6 @@ int main() {
        << " minutes."
        << "\n";
 
-  /**
-  map<int, int> sleepCount;
-  for (auto [time, action] : actions) {
-    if (action.second == sleepiest) {
-      cout << asctime(&time) << "Guard " << action.second << " does "
-           << action.first;
-      if (action.first == WAKE) {
-        int sleepInterval = abs(lastTime.tm_min - time.tm_min);
-        int startMin = lastTime.tm_min;
-        cout << "Start min: " << startMin;
-        while (sleepInterval > 0) {
-          sleepCount[startMin + sleepInterval]++;
-          sleepInterval--;
-        }
-      }
-    }
-    lastTime = time;
-  }
-  */
-
   max = -1;
   int sleepiestMin = -1;
 
@@ -151,4 +133,19 @@ int main() {
   cout << "Sleepiest minute: " << sleepiestMin << "\n";
 
   cout << "Checksum 1: " << sleepiestMin * sleepiest << "\n";
+
+  max = -1;
+  sleepiestMin = -1;
+  sleepiest = -1;
+  for (auto [minute, countByGuard] : minutesBySleepingGuard) {
+    for (auto [guard, count] : countByGuard) {
+      if (count > max) {
+        sleepiestMin = minute;
+        sleepiest = guard;
+        max = count;
+      }
+    }
+  }
+
+  cout << "Checksum 2: " << sleepiestMin * sleepiest << "\n";
 }
