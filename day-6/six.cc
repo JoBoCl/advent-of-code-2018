@@ -49,48 +49,38 @@ int manhattan(pair<int, int> a, pair<int, int> b) {
 }
 
 int minId(pair<int, int> a, vector<pair<int, int>> positions) {
-  map<int, set<int>> pointsByDistance;
+  map<int, int> pointsByDistance;
   int id = 1;
   for (pair<int, int> p : positions) {
     int md = manhattan(a, p);
-    pointsByDistance[md].insert(id);
+    if (pointsByDistance[md] != 0) {
+      pointsByDistance[md] = -1;
+    } else {
+      pointsByDistance[md] = id;
+    }
     id++;
   }
-  set<int> minDistPoints = pointsByDistance.begin()->second;
-  return minDistPoints.size() == 1 ? *minDistPoints.begin() : -1;
+  return pointsByDistance.begin()->second;
 }
 
-void partOne(Puzzle puzzle) {
-  pair<int, int> maxSize = puzzle.bounds;
+void partOne(Puzzle* puzzle) {
+  pair<int, int> maxSize = puzzle->bounds;
   const int maxX = maxSize.first;
   const int maxY = maxSize.second;
 
   int** array = new int*[maxX];
-  for (int i = 0; i < maxX; i++) {
-    array[i] = new int[maxY];
-  }
-
-  int id = 1;
-  for (auto pair : puzzle.points) {
-    array[pair.first][pair.second] = id;
-    id++;
-  }
-
-  for (int x = 0; x < maxX; x++) {
-    for (int y = 0; y < maxY; y++) {
-      array[x][y] = minId(make_pair(x, y), puzzle.points);
-    }
-  }
 
   // id to size
   map<int, int> sizes;
 
   for (int x = 0; x < maxX; x++) {
+    array[x] = new int[maxY];
     for (int y = 0; y < maxY; y++) {
+      int id = minId(make_pair(x, y), puzzle->points);
       if (x == 0 || x + 1 == maxX || y == 0 || y + 1 == maxY) {
-        sizes[array[x][y]] = numeric_limits<int>::min();
-      } else {
-        sizes[array[x][y]]++;
+        sizes[id] = numeric_limits<int>::min();
+      } else if (id != -1 && sizes[id] != numeric_limits<int>::min()) {
+        sizes[id]++;
       }
     }
   }
@@ -114,8 +104,8 @@ int totalDistance(pair<int, int> p, vector<pair<int, int>> locs) {
   return std::accumulate(distances.begin(), distances.end(), 0);
 }
 
-void partTwo(Puzzle puzzle) {
-  pair<int, int> maxSize = puzzle.bounds;
+void partTwo(Puzzle* puzzle) {
+  pair<int, int> maxSize = puzzle->bounds;
   const int maxX = maxSize.first;
   const int maxY = maxSize.second;
 
@@ -123,7 +113,7 @@ void partTwo(Puzzle puzzle) {
 
   for (int x = 0; x < maxX; x++) {
     for (int y = 0; y < maxY; y++) {
-      if (totalDistance(make_pair(x, y), puzzle.points) < 10000) {
+      if (totalDistance(make_pair(x, y), puzzle->points) < 10000) {
         size++;
       }
     }
@@ -135,7 +125,7 @@ void partTwo(Puzzle puzzle) {
 int main() {
   auto puzzle = readSequence();
   cout << "==== Part One ====\n";
-  partOne(puzzle);
+  partOne(&puzzle);
   cout << "\n==== Part Two ====\n";
-  partTwo(puzzle);
+  partTwo(&puzzle);
 }
