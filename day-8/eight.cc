@@ -46,12 +46,8 @@ Node readSequence() {
   if (myfile.is_open()) {
     getline(myfile, line);
     istringstream iss(line);
-    vector<string> tokens((istream_iterator<string>(iss)),
-                          istream_iterator<string>());
-    vector<int> results;
-    transform(tokens.begin(), tokens.end(), back_inserter(results),
-              [](string s) -> int { return stoi(s); });
-    node = parseNode(&results);
+    vector<int> tokens((istream_iterator<int>(iss)), istream_iterator<int>());
+    node = parseNode(&tokens);
   }
 
   return node;
@@ -65,9 +61,24 @@ int metadataSum(struct Node *node) {
   return accumulate(childSums.begin(), childSums.end(), nodeSum);
 }
 
+int nodeSum(struct Node *node) {
+  vector<Node> children = node->child;
+  if (!children.empty()) {
+    int nodeValue = 0;
+    for (int metadataVal : node->metadata) {
+      if (1 <= metadataVal && metadataVal <= children.size()) {
+        nodeValue += nodeSum(&(children[metadataVal - 1]));
+      }
+    }
+    return nodeValue;
+  } else {
+    return accumulate(node->metadata.begin(), node->metadata.end(), 0);
+  }
+}
+
 void partOne(struct Node *node) { cout << metadataSum(node); }
 
-void partTwo(struct Node *node) {}
+void partTwo(struct Node *node) { cout << nodeSum(node); }
 
 int main() {
   struct Node node = readSequence();
