@@ -29,10 +29,10 @@ struct Box {
   int y1;
 };
 
-int area(struct Box* b) { return (b->x1 - b->x0) * (b->y1 - b->y0); }
-int perimeter(struct Box* b) { return (b->x1 - b->x0) + (b->y1 - b->y0); }
+int area(struct Box *b) { return (b->x1 - b->x0) * (b->y1 - b->y0); }
+int perimeter(struct Box *b) { return (b->x1 - b->x0) + (b->y1 - b->y0); }
 
-bool lessThan(struct Box* l, struct Box* r) {
+bool lessThan(struct Box *l, struct Box *r) {
   return perimeter(l) < perimeter(r);
 }
 
@@ -40,9 +40,8 @@ vector<struct Star> readSequence() {
   vector<struct Star> stars;
   std::ifstream myfile("10.input");
   string line;
-  regex matcher(
-      "position=<\\s*(-?\\d+),\\s*(-?\\d+)> "
-      "velocity=<\\s*(-?\\d+),\\s*(-?\\d+)>");
+  regex matcher("position=<\\s*(-?\\d+),\\s*(-?\\d+)> "
+                "velocity=<\\s*(-?\\d+),\\s*(-?\\d+)>");
   if (myfile.is_open()) {
     while (getline(myfile, line)) {
       struct Star star;
@@ -61,59 +60,66 @@ vector<struct Star> readSequence() {
   return stars;
 }
 
-Box maxSize(vector<Star>* stars) {
+Box maxSize(vector<Star> *stars) {
   struct Box box;
   box.x0 = numeric_limits<int>::max();
   box.y0 = numeric_limits<int>::max();
   box.x1 = numeric_limits<int>::min();
   box.y1 = numeric_limits<int>::min();
 
-  for (struct Star star : *stars) {
-    if (star.x < box.x0) box.x0 = star.x;
-    if (star.y < box.y0) box.y0 = star.y;
-    if (star.x > box.x1) box.x1 = star.x;
-    if (star.y > box.y1) box.y1 = star.y;
+  for (Star &star : *stars) {
+    if (star.x < box.x0)
+      box.x0 = star.x;
+    if (star.y < box.y0)
+      box.y0 = star.y;
+    if (star.x > box.x1)
+      box.x1 = star.x;
+    if (star.y > box.y1)
+      box.y1 = star.y;
   }
   return box;
 }
 
-void advance(struct Star* star) {
+void advance(Star *star) {
   star->x += star->u;
   star->y += star->v;
 }
 
-void retreat(struct Star* star) {
+void retreat(Star *star) {
   star->x -= star->u;
   star->y -= star->v;
 }
 
-void partOne(vector<struct Star> stars) {
+void partOne(vector<Star> stars) {
   struct Box oldBounds;
   struct Box newBounds = maxSize(&stars);
   int iterations = 0;
 
   do {
     oldBounds = newBounds;
-    for (auto star : stars) {
+    for (auto &star : stars) {
       advance(&star);
     }
     newBounds = maxSize(&stars);
     iterations++;
-  } while (lessThan(&oldBounds, &newBounds));
+  } while (lessThan(&newBounds, &oldBounds));
 
   cout << "Current bounds: " << oldBounds.x1 - oldBounds.x0 << ", "
-       << oldBounds.y1 - oldBounds.y0 << " after " << iterations
+       << oldBounds.y1 - oldBounds.y0 << " after " << iterations - 1
        << " iterations.  Print [y/N]?";
-  char print;
-  cin >> print;
 
-  for (auto star : stars) retreat(&star);
+  char print = 'Y';
+  // cin >> print;
+
+  for (auto &star : stars) {
+    retreat(&star);
+  }
 
   if (toupper(print) == 'Y') {
-    for (int j = oldBounds.y0; j < oldBounds.y1; j++) {
-      for (int i = oldBounds.x0; i < oldBounds.x1; i++) {
+    for (int j = oldBounds.y0; j <= oldBounds.y1; j++) {
+      for (int i = oldBounds.x0; i <= oldBounds.x1; i++) {
         bool print = false;
-        for (auto star : stars) {
+        for (auto &star : stars) {
           if (star.x == i && star.y == j) {
             print = true;
             break;
@@ -127,7 +133,7 @@ void partOne(vector<struct Star> stars) {
   }
 }
 
-void partTwo(vector<struct Star> stars) {}
+void partTwo(vector<Star> stars) {}
 
 int main() {
   vector<struct Star> node = readSequence();
