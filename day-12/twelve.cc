@@ -14,10 +14,10 @@
 #include <utility>
 #include <vector>
 
-std::pair<std::set<int>, std::map<char, bool>> readSequence() {
-  std::ifstream myfile("test.input");
+std::pair<std::set<int>, std::set<char>> readSequence() {
+  std::ifstream myfile("12.input");
   std::set<int> initialState;
-  std::map<char, bool> transitions;
+  std::set<char> transitions;
   std::string line;
   if (myfile.is_open()) {
     if (getline(myfile, line)) {
@@ -33,41 +33,46 @@ std::pair<std::set<int>, std::map<char, bool>> readSequence() {
       for (int i = 0; i < 5; i++) {
         p |= (line[i] == '#') << (4 - i);
       }
-      transitions[p] = line[9] == '#';
+      if (line[9] == '#') {
+        transitions.insert(p);
+      }
     }
   }
 
   return std::make_pair(initialState, transitions);
 }
 
-void partOne(std::pair<std::set<int>, std::map<char, bool>> *puzzle) {
+void iterate(std::pair<std::set<int>, std::set<char>> *puzzle,
+             long iterations) {
   std::set<int> state = puzzle->first;
   std::set<int> newState;
 
-  int startVal = *state.begin() - 2;
-  int endVal = *state.rbegin() + 2;
+  for (auto t : puzzle->second) {
+    // std::cout << (int)t << ", ";
+  }
+  // std::cout << "\n";
 
-  for (int n = 0; n <= 20; n++) {
+  for (long n = 0; n < iterations; n++) {
     newState.clear();
-    std::cout << (n < 10 ? " " : "") << n << ": ";
+    // std::cout << (n < 10 ? " " : "") << n << ": ";
+    int startVal = *state.begin() - 2;
+    int endVal = *state.rbegin() + 2;
 
     for (int i = startVal; i <= endVal; i++) {
       if (-3 <= i && i <= 38) {
-        std::cout << (state.count(i) ? '#' : '.');
+        // std::cout << (state.count(i) ? '#' : '.');
       }
       char p = 0;
       for (int j = 0; j < 5; j++) {
         p |= state.count(i + j - 2) << (4 - j);
       }
-      if (puzzle->second[p]) {
+      if (puzzle->second.count(p) == 1) {
         newState.insert(i);
       }
     }
 
-    std::cout << " (" << startVal << ", " << endVal << ")\n";
+    // std::cout << " (" << startVal << ", " << endVal << ")\n";
     state = newState;
-    startVal = *state.begin() - 2;
-    endVal = *state.rbegin() + 2;
   }
 
   int sum = 0;
@@ -79,7 +84,12 @@ void partOne(std::pair<std::set<int>, std::map<char, bool>> *puzzle) {
   std::cout << "Total value in pots: " << sum;
 }
 
-void partTwo(std::pair<std::set<int>, std::map<char, bool>> *puzzle) {}
+void partOne(std::pair<std::set<int>, std::set<char>> *puzzle) {
+  iterate(puzzle, 20);
+}
+void partTwo(std::pair<std::set<int>, std::set<char>> *puzzle) {
+  // iterate(puzzle, 50000000000);
+}
 
 int main() {
   auto puzzle = readSequence();
