@@ -54,14 +54,12 @@ void iterate(std::pair<std::set<int>, std::set<char>> *puzzle,
 
   for (long n = 0; n < iterations; n++) {
     newState.clear();
-    // std::cout << (n < 10 ? " " : "") << n << ": ";
+    std::cout << (n < 10 ? " " : "") << n << ": ";
     int startVal = *state.begin() - 2;
     int endVal = *state.rbegin() + 2;
 
     for (int i = startVal; i <= endVal; i++) {
-      if (-3 <= i && i <= 38) {
-        // std::cout << (state.count(i) ? '#' : '.');
-      }
+      std::cout << (state.count(i) ? '#' : '.');
       char p = 0;
       for (int j = 0; j < 5; j++) {
         p |= state.count(i + j - 2) << (4 - j);
@@ -71,7 +69,7 @@ void iterate(std::pair<std::set<int>, std::set<char>> *puzzle,
       }
     }
 
-    // std::cout << " (" << startVal << ", " << endVal << ")\n";
+    std::cout << " (" << startVal << ", " << endVal << ")\n";
     state = newState;
   }
 
@@ -88,7 +86,13 @@ void partOne(std::pair<std::set<int>, std::set<char>> *puzzle) {
   iterate(puzzle, 20);
 }
 void partTwo(std::pair<std::set<int>, std::set<char>> *puzzle) {
+  iterate(puzzle, 200);
   // iterate(puzzle, 50000000000);
+  // This would have taken approx 5.83 days to calculate.
+  //
+  // Fortunately, the columns eventually reached a steady-state, consistently
+  // moving one left.  After analysing this pattern, it is possible to
+  // calculate the end positions by hand, and then get a sum.
 }
 
 int main() {
