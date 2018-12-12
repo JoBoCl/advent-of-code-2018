@@ -14,22 +14,24 @@
 #include <utility>
 #include <vector>
 
-std::pair<std::map<int, bool>, std::map<char, bool>> readSequence() {
+std::pair<std::set<int>, std::map<char, bool>> readSequence() {
   std::ifstream myfile("test.input");
-  std::map<int, bool> initialState;
+  std::set<int> initialState;
   std::map<char, bool> transitions;
   std::string line;
   if (myfile.is_open()) {
     if (getline(myfile, line)) {
       for (int i = 15; i < line.length(); i++) {
-        initialState[i - 15] = (line[i] == '#');
+        if (line[i] == '#') {
+          initialState.insert(i - 15);
+        }
       }
     }
     getline(myfile, line); // Skip empty line.
     while (getline(myfile, line)) {
       char p = 0;
       for (int i = 0; i < 5; i++) {
-        p += line[i] == '#' ? (char)1 << (4 - i) : 0;
+        p |= (line[i] == '#') << (4 - i);
       }
       transitions[p] = line[9] == '#';
     }
@@ -38,51 +40,46 @@ std::pair<std::map<int, bool>, std::map<char, bool>> readSequence() {
   return std::make_pair(initialState, transitions);
 }
 
-void partOne(std::pair<std::map<int, bool>, std::map<char, bool>> *puzzle) {
-  std::map<int, bool> state = puzzle->first;
-  std::map<int, bool> newState;
-  newState.insert(state.begin(), state.end());
+void partOne(std::pair<std::set<int>, std::map<char, bool>> *puzzle) {
+  std::set<int> state = puzzle->first;
+  std::set<int> newState;
 
-  int startVal = 0;
-  int endVal = state.size();
+  int startVal = *state.begin() - 2;
+  int endVal = *state.rbegin() + 2;
 
   for (int n = 0; n <= 20; n++) {
+    newState.clear();
     std::cout << (n < 10 ? " " : "") << n << ": ";
 
-    for (int i = startVal; i < endVal; i++) {
+    for (int i = startVal; i <= endVal; i++) {
       if (-3 <= i && i <= 38) {
-        std::cout << (state[i] ? '#' : '.');
+        std::cout << (state.count(i) ? '#' : '.');
       }
       char p = 0;
-      for (int j = -2; j < 3; j++) {
-        p += state[i + j] ? (char)1 << (2 - j) : 0;
+      for (int j = 0; j < 5; j++) {
+        p |= state.count(i + j - 2) << (4 - j);
       }
-      newState[i] = (puzzle->second[p]);
+      if (puzzle->second[p]) {
+        newState.insert(i);
+      }
     }
 
-    state.clear();
-    state.insert(newState.begin(), newState.end());
-    newState.clear();
-    if (state.begin()->second) {
-      startVal -= 4;
-    }
-    if (state.rbegin()->second) {
-      endVal += 4;
-    }
     std::cout << " (" << startVal << ", " << endVal << ")\n";
+    state = newState;
+    startVal = *state.begin() - 2;
+    endVal = *state.rbegin() + 2;
   }
+
   int sum = 0;
 
-  for (auto [pos, plant] : state) {
-    if (plant) {
-      sum += pos;
-    }
+  for (auto pos : state) {
+    sum += pos;
   }
 
   std::cout << "Total value in pots: " << sum;
 }
 
-void partTwo(std::pair<std::map<int, bool>, std::map<char, bool>> *puzzle) {}
+void partTwo(std::pair<std::set<int>, std::map<char, bool>> *puzzle) {}
 
 int main() {
   auto puzzle = readSequence();
