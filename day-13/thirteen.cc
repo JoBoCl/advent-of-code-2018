@@ -21,20 +21,11 @@ enum Turn { LEFT, FORWARD, RIGHT };
 
 enum Direction { NORTH, EAST, SOUTH, WEST };
 
-Direction opposite(Direction d) {
-  switch (d) {
-    case NORTH:
-      return SOUTH;
-    case SOUTH:
-      return NORTH;
-    case EAST:
-      return WEST;
-    case WEST:
-      return EAST;
-  }
-}
+Direction opposite(Direction d) { return static_cast<Direction>((d + 2) % 4); }
 
 struct Location {
+  Location() : x(-1), y(-1), isTrack(false), type(EMPTY) {}
+
   int x;
   int y;
   bool isTrack;
@@ -110,17 +101,6 @@ struct Cart {
   }
 };
 
-bool operator<(Cart const &left, Cart const &right) {
-  if (left.y < right.y) {
-    return true;
-  }
-  if (left.y > right.y) {
-    return false;
-  }
-
-  return left.x < right.x;
-}
-
 struct Puzzle {
   std::map<int, Location> locations;
   std::map<int, Cart *> carts;
@@ -129,16 +109,23 @@ struct Puzzle {
 
   int position(int x, int y) { return y * this->maxX + x; }
 
+  Location location(int p) {
+    auto loc = this->locations.at(p);
+    assert(loc.x != -1 && loc.y != -1);
+    return loc;
+  }
+
   Location location(int x, int y) {
-    return this->locations[this->position(x, y)];
+    return this->location(this->position(x, y));
   }
 
   void print() {
     std::cout << "Carts on track: " << this->carts.size() << "\n";
     for (int i = 0; i < maxY; i++) {
       for (int j = 0; j < maxX; j++) {
-        if (this->carts.count(this->position(j, i)) > 0) {
-          switch (this->carts[this->position(j, i)]->direction) {
+        int pos = this->position(j, i);
+        if (this->carts.count(pos) > 0) {
+          switch (this->carts[pos]->direction) {
             case NORTH:
               std::cout << "^";
               break;
@@ -155,7 +142,13 @@ struct Puzzle {
 
           continue;
         }
-        switch (this->location(j, i).type) {
+
+        if (this->locations.count(pos) == 0) {
+          std::cout << ' ';
+          continue;
+        }
+
+        switch (this->locations[pos].type) {
           case JUNCTION:
             std::cout << '+';
             break;
@@ -346,7 +339,7 @@ bool tick(Puzzle *puzzle) {
       continue;
     }
 
-    auto currentLocation = puzzle->locations[pos];
+    auto currentLocation = puzzle->location(pos);
     Direction oldDir = cart->currentDirection();
     Direction dir = cart->currentDirection();
     if (currentLocation.isJunction()) {
@@ -356,13 +349,13 @@ bool tick(Puzzle *puzzle) {
       cart->direction = dir;
     }
     assert(currentLocation.neighbours.count(dir) == 1);
-    auto nextLocation = puzzle->locations[currentLocation.neighbours[dir]];
+    auto nextLocation = puzzle->location(currentLocation.neighbours[dir]);
     assert(nextLocation.isTrack);
     cart->nextPosition();
     int newIndex = puzzle->position(cart->x, cart->y);
     assert((puzzle->location(cart->x, cart->y) == nextLocation));
-    if (puzzle->carts.count(newIndex) ==
-        1) {  // Collision before other car moved.
+    // Collision before other car moved.
+    if (puzzle->carts.count(newIndex) == 1) {
       crashed = true;
       std::cout << "Crash at: " << cart->x << ", " << cart->y << "\n";
       puzzle->carts[newIndex]->crashed = true;
