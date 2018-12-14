@@ -51,6 +51,9 @@ bool operator==(const Location &l, const Location &r) {
 }
 
 struct Cart {
+
+  Cart() : nextTurn(LEFT), crashed(false) {}
+
   Turn nextTurn;
   Direction direction;
   int x;
@@ -70,11 +73,11 @@ struct Cart {
       case NORTH:
         y--;
         return;
-      case SOUTH:
-        y++;
-        return;
       case EAST:
         x++;
+        return;
+      case SOUTH:
+        y++;
         return;
       case WEST:
         x--;
@@ -86,7 +89,7 @@ struct Cart {
   Direction nextDirection() {
     switch (nextTurn) {
       case LEFT:
-        direction = static_cast<Direction>((direction - 1) % 4);
+        direction = static_cast<Direction>((direction + 3) % 4);
         nextTurn = FORWARD;
         break;
       case FORWARD:
@@ -194,8 +197,6 @@ Puzzle readSequence() {
         l->y = y;
         Cart *c = new Cart;
         Location predecessor;
-        c->nextTurn = LEFT;
-        c->crashed = false;
         bool cartFound = false;
         switch (ch) {
           case '+':
