@@ -51,7 +51,6 @@ bool operator==(const Location &l, const Location &r) {
 }
 
 struct Cart {
-
   Cart() : nextTurn(LEFT), crashed(false) {}
 
   Turn nextTurn;
@@ -182,7 +181,7 @@ struct Puzzle {
 };
 
 Puzzle readSequence() {
-  std::ifstream myfile("joe.input");
+  std::ifstream myfile("13.input");
   Puzzle puzzle;
   std::string line;
   if (myfile.is_open()) {
@@ -192,71 +191,72 @@ Puzzle readSequence() {
     do {
       int x = 0;
       for (char ch : line) {
-        auto l = &puzzle.locations[puzzle.position(x, y)];
-        l->x = x;
-        l->y = y;
+        Location l;
+        l.x = x;
+        l.y = y;
         Cart *c = new Cart;
         Location predecessor;
         bool cartFound = false;
+        bool trackFound = true;
         switch (ch) {
           case '+':
-            l->isTrack = true;
-            l->neighbours[NORTH] = puzzle.position(x, y - 1);
-            l->neighbours[SOUTH] = puzzle.position(x, y + 1);
-            l->neighbours[EAST] = puzzle.position(x + 1, y);
-            l->neighbours[WEST] = puzzle.position(x - 1, y);
-            l->type = JUNCTION;
+            l.isTrack = true;
+            l.neighbours[NORTH] = puzzle.position(x, y - 1);
+            l.neighbours[SOUTH] = puzzle.position(x, y + 1);
+            l.neighbours[EAST] = puzzle.position(x + 1, y);
+            l.neighbours[WEST] = puzzle.position(x - 1, y);
+            l.type = JUNCTION;
             break;
 
           case '-':
-            l->isTrack = true;
-            l->neighbours[EAST] = puzzle.position(x + 1, y);
-            l->neighbours[WEST] = puzzle.position(x - 1, y);
-            l->type = HORIZ;
+            l.isTrack = true;
+            l.neighbours[EAST] = puzzle.position(x + 1, y);
+            l.neighbours[WEST] = puzzle.position(x - 1, y);
+            l.type = HORIZ;
             break;
 
           case '|':
-            l->isTrack = true;
-            l->neighbours[NORTH] = puzzle.position(x, y - 1);
-            l->neighbours[SOUTH] = puzzle.position(x, y + 1);
-            l->type = VERT;
+            l.isTrack = true;
+            l.neighbours[NORTH] = puzzle.position(x, y - 1);
+            l.neighbours[SOUTH] = puzzle.position(x, y + 1);
+            l.type = VERT;
             break;
 
           case '\\':
-            l->isTrack = true;
+            l.isTrack = true;
             // |
             // \-
             predecessor = puzzle.locations[puzzle.position(x, y - 1)];
             if (predecessor.isTrack &&
                 (predecessor.type == VERT || predecessor.type == JUNCTION)) {
-              l->neighbours[NORTH] = puzzle.position(x, y - 1);
-              l->neighbours[EAST] = puzzle.position(x + 1, y);
+              l.neighbours[NORTH] = puzzle.position(x, y - 1);
+              l.neighbours[EAST] = puzzle.position(x + 1, y);
             } else {
               // -\ 
 	          //  |
               assert((puzzle.locations[puzzle.position(x - 1, y)].isTrack));
-              l->neighbours[SOUTH] = puzzle.position(x, y + 1);
-              l->neighbours[WEST] = puzzle.position(x - 1, y);
+              l.neighbours[SOUTH] = puzzle.position(x, y + 1);
+              l.neighbours[WEST] = puzzle.position(x - 1, y);
             }
-            l->type = TURN_R;
+            l.type = TURN_R;
             break;
 
           case '/':
-            l->isTrack = true;
-            l->type = TURN_L;
+            l.isTrack = true;
+            l.type = TURN_L;
             //  |
             // -/
             predecessor = puzzle.locations[puzzle.position(x, y - 1)];
             if (predecessor.isTrack &&
                 (predecessor.type == VERT || predecessor.type == JUNCTION)) {
-              l->neighbours[NORTH] = puzzle.position(x, y - 1);
-              l->neighbours[WEST] = puzzle.position(x - 1, y);
+              l.neighbours[NORTH] = puzzle.position(x, y - 1);
+              l.neighbours[WEST] = puzzle.position(x - 1, y);
             } else {
               // /-
               // |
               // cassert((puzzle.locations[puzzle.position(x, y - 1)].isTrack));
-              l->neighbours[SOUTH] = puzzle.position(x, y + 1);
-              l->neighbours[EAST] = puzzle.position(x + 1, y);
+              l.neighbours[SOUTH] = puzzle.position(x, y + 1);
+              l.neighbours[EAST] = puzzle.position(x + 1, y);
             }
             break;
 
@@ -266,10 +266,10 @@ Puzzle readSequence() {
             c->x = x;
             c->y = y;
             puzzle.carts[puzzle.position(x, y)] = c;
-            l->isTrack = true;
-            l->neighbours[EAST] = puzzle.position(x + 1, y);
-            l->neighbours[WEST] = puzzle.position(x - 1, y);
-            l->type = HORIZ;
+            l.isTrack = true;
+            l.neighbours[EAST] = puzzle.position(x + 1, y);
+            l.neighbours[WEST] = puzzle.position(x - 1, y);
+            l.type = HORIZ;
             cartFound = true;
             break;
 
@@ -278,10 +278,10 @@ Puzzle readSequence() {
             c->x = x;
             c->y = y;
             puzzle.carts[puzzle.position(x, y)] = c;
-            l->isTrack = true;
-            l->neighbours[EAST] = puzzle.position(x + 1, y);
-            l->neighbours[WEST] = puzzle.position(x - 1, y);
-            l->type = HORIZ;
+            l.isTrack = true;
+            l.neighbours[EAST] = puzzle.position(x + 1, y);
+            l.neighbours[WEST] = puzzle.position(x - 1, y);
+            l.type = HORIZ;
             cartFound = true;
             break;
 
@@ -290,10 +290,10 @@ Puzzle readSequence() {
             c->x = x;
             c->y = y;
             puzzle.carts[puzzle.position(x, y)] = c;
-            l->isTrack = true;
-            l->neighbours[NORTH] = puzzle.position(x, y - 1);
-            l->neighbours[SOUTH] = puzzle.position(x, y + 1);
-            l->type = VERT;
+            l.isTrack = true;
+            l.neighbours[NORTH] = puzzle.position(x, y - 1);
+            l.neighbours[SOUTH] = puzzle.position(x, y + 1);
+            l.type = VERT;
             cartFound = true;
             break;
 
@@ -302,22 +302,27 @@ Puzzle readSequence() {
             c->x = x;
             c->y = y;
             puzzle.carts[puzzle.position(x, y)] = c;
-            l->isTrack = true;
-            l->neighbours[NORTH] = puzzle.position(x, y - 1);
-            l->neighbours[SOUTH] = puzzle.position(x, y + 1);
-            l->type = VERT;
+            l.isTrack = true;
+            l.neighbours[NORTH] = puzzle.position(x, y - 1);
+            l.neighbours[SOUTH] = puzzle.position(x, y + 1);
+            l.type = VERT;
             cartFound = true;
             break;
 
           default:
           case ' ':
-            l->isTrack = false;
-            l->type = EMPTY;
+            l.isTrack = false;
+            l.type = EMPTY;
+            trackFound = false;
             break;
         }
 
         if (!cartFound) {
           delete c;
+        }
+
+        if (trackFound) {
+          puzzle.locations[puzzle.position(x, y)] = l;
         }
 
         x++;
@@ -330,9 +335,9 @@ Puzzle readSequence() {
   return puzzle;
 }
 
-bool tick(Puzzle *puzzle) {
+std::pair<bool, int> tick(Puzzle *puzzle) {
   bool crashed = false;
-  std::map<int, std::set<Cart *>> cartsByPosition;
+  std::map<int, Cart *> cartsByPosition;
   // Ordered by position.
   for (auto [pos, cart] : puzzle->carts) {
     if (cart->crashed) {
@@ -357,47 +362,42 @@ bool tick(Puzzle *puzzle) {
     assert((puzzle->location(cart->x, cart->y) == nextLocation));
     // Collision before other car moved.
     if (puzzle->carts.count(newIndex) == 1) {
+      auto other = puzzle->carts[newIndex];
+      if (other->x == cart->x && other->y == cart->y) {
+        crashed = true;
+        std::cout << "Crash at: " << cart->x << ", " << cart->y << "\n";
+        puzzle->carts[newIndex]->crashed = true;
+        delete cart;
+      } else {
+        cartsByPosition[newIndex] = cart;
+      }
+    } else if (cartsByPosition.count(newIndex) == 1) {
       crashed = true;
       std::cout << "Crash at: " << cart->x << ", " << cart->y << "\n";
-      puzzle->carts[newIndex]->crashed = true;
       delete cart;
+      cartsByPosition.erase(newIndex);
     } else {
-      cartsByPosition[newIndex].insert(cart);
+      cartsByPosition[newIndex] = cart;
     }
   }
 
   puzzle->carts.clear();
 
-  std::cout << "Unique positions with carts: " << cartsByPosition.size()
-            << ".\n";
+  puzzle->carts = cartsByPosition;
 
-  for (auto [pos, cs] : cartsByPosition) {
-    if (cs.size() == 1) {
-      auto c = *cs.begin();
-      if (!c->crashed) {
-        puzzle->carts[pos] = c;
-      }
-    } else {
-      crashed = true;
-      auto c = *cs.begin();
-      std::cout << "Crash at: " << c->x << ", " << c->y << "\n";
-
-      for (auto it = cs.begin(); it != cs.end(); it++) {
-        delete *it;
-      }
-    }
-  }
-
-  return crashed;
+  return std::make_pair(crashed, cartsByPosition.size());
 }
 
 int main() {
   auto puzzle = readSequence();
-  puzzle.print();
   int i = 0;
-  while (!tick(&puzzle) && i < 200) {
-    puzzle.print();
-    std::cout << "Iteration " << ++i << " completed.\n";
+  while (!tick(&puzzle).first) {
+    // puzzle.print();
+    //  std::cout << "Iteration " << ++i << " completed.\n";
   }
-  puzzle.print();
+  while (tick(&puzzle).second != 1) {
+  }
+  auto lastRemaining = puzzle.carts.begin();
+  std::cout << "Last remaining cart at " << lastRemaining->second->x << ", "
+            << lastRemaining->second->y;
 }
