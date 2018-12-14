@@ -19,7 +19,20 @@ enum Track { EMPTY, JUNCTION, TURN_L, TURN_R, VERT, HORIZ };
 
 enum Turn { LEFT, FORWARD, RIGHT };
 
-enum Direction { NORTH, SOUTH, EAST, WEST };
+enum Direction { NORTH, EAST, SOUTH, WEST };
+
+Direction opposite(Direction d) {
+  switch (d) {
+    case NORTH:
+      return SOUTH;
+    case SOUTH:
+      return NORTH;
+    case EAST:
+      return WEST;
+    case WEST:
+      return EAST;
+  }
+}
 
 struct Location {
   int x;
@@ -34,7 +47,7 @@ struct Location {
   Direction change(Direction d) {
     assert(this->shouldTurn());
     for (auto [dir, i] : this->neighbours) {
-      if (dir != d) {
+      if (dir != d && opposite(d) != dir) {
         return dir;
       }
     }
@@ -63,81 +76,37 @@ struct Cart {
   /** Returns the next position, and updates the current state. */
   void nextPosition() {
     switch (direction) {
-    case NORTH:
-      y--;
-      return;
-    case SOUTH:
-      y++;
-      return;
-    case EAST:
-      x++;
-      return;
-    case WEST:
-      x--;
-      return;
+      case NORTH:
+        y--;
+        return;
+      case SOUTH:
+        y++;
+        return;
+      case EAST:
+        x++;
+        return;
+      case WEST:
+        x--;
+        return;
     }
   }
 
   /** Returns the next direction, and updates the current state. */
   Direction nextDirection() {
-    switch (direction) {
-    case NORTH:
-      switch (nextTurn) {
+    switch (nextTurn) {
       case LEFT:
+        direction = static_cast<Direction>((direction - 1) % 4);
         nextTurn = FORWARD;
-        direction = WEST;
-        return WEST;
+        break;
       case FORWARD:
         nextTurn = RIGHT;
-        return direction;
+        break;
       case RIGHT:
+        direction = static_cast<Direction>((direction + 1) % 4);
         nextTurn = LEFT;
-        direction = EAST;
-        return EAST;
-      }
-    case EAST:
-      switch (nextTurn) {
-      case LEFT:
-        nextTurn = FORWARD;
-        direction = NORTH;
-        return NORTH;
-      case FORWARD:
-        nextTurn = RIGHT;
-        return direction;
-      case RIGHT:
-        nextTurn = LEFT;
-        direction = SOUTH;
-        return SOUTH;
-      }
-    case SOUTH:
-      switch (nextTurn) {
-      case LEFT:
-        nextTurn = FORWARD;
-        direction = EAST;
-        return EAST;
-      case FORWARD:
-        nextTurn = RIGHT;
-        return direction;
-      case RIGHT:
-        nextTurn = LEFT;
-        direction = WEST;
-        return WEST;
-      }
-    case WEST:
-      switch (nextTurn) {
-      case LEFT:
-        nextTurn = FORWARD;
-        direction = SOUTH;
-        return SOUTH;
-      case FORWARD:
-        nextTurn = RIGHT;
-        return direction;
-      case RIGHT:
-        nextTurn = LEFT;
-        direction = NORTH;
-        return NORTH;
-      }
+        break;
     }
+    return direction;
   }
 };
 
@@ -170,45 +139,45 @@ struct Puzzle {
       for (int j = 0; j < maxX; j++) {
         if (this->carts.count(this->position(j, i)) > 0) {
           switch (this->carts[this->position(j, i)]->direction) {
-          case NORTH:
-            std::cout << "^";
-            break;
-          case SOUTH:
-            std::cout << "v";
-            break;
-          case WEST:
-            std::cout << "<";
-            break;
-          case EAST:
-            std::cout << ">";
-            break;
+            case NORTH:
+              std::cout << "^";
+              break;
+            case SOUTH:
+              std::cout << "v";
+              break;
+            case WEST:
+              std::cout << "<";
+              break;
+            case EAST:
+              std::cout << ">";
+              break;
           }
 
           continue;
         }
         switch (this->location(j, i).type) {
-        case JUNCTION:
-          std::cout << '+';
-          break;
+          case JUNCTION:
+            std::cout << '+';
+            break;
 
-        case TURN_R:
-          std::cout << '\\';
-          break;
-        case TURN_L:
-          std::cout << '/';
-          break;
+          case TURN_R:
+            std::cout << '\\';
+            break;
+          case TURN_L:
+            std::cout << '/';
+            break;
 
-        case VERT:
-          std::cout << '|';
-          break;
-        case HORIZ:
-          std::cout << '-';
-          break;
+          case VERT:
+            std::cout << '|';
+            break;
+          case HORIZ:
+            std::cout << '-';
+            break;
 
-        default:
-        case EMPTY:
-          std::cout << ' ';
-          break;
+          default:
+          case EMPTY:
+            std::cout << ' ';
+            break;
         }
       }
       std::cout << "\n";
@@ -217,7 +186,7 @@ struct Puzzle {
 };
 
 Puzzle readSequence() {
-  std::ifstream myfile("13.input");
+  std::ifstream myfile("joe.input");
   Puzzle puzzle;
   std::string line;
   if (myfile.is_open()) {
@@ -236,122 +205,123 @@ Puzzle readSequence() {
         c->crashed = false;
         bool cartFound = false;
         switch (ch) {
-        case '+':
-          l->isTrack = true;
-          l->neighbours[NORTH] = puzzle.position(x, y - 1);
-          l->neighbours[SOUTH] = puzzle.position(x, y + 1);
-          l->neighbours[EAST] = puzzle.position(x + 1, y);
-          l->neighbours[WEST] = puzzle.position(x - 1, y);
-          l->type = JUNCTION;
-          break;
-
-        case '-':
-          l->isTrack = true;
-          l->neighbours[EAST] = puzzle.position(x + 1, y);
-          l->neighbours[WEST] = puzzle.position(x - 1, y);
-          l->type = HORIZ;
-          break;
-
-        case '|':
-          l->isTrack = true;
-          l->neighbours[NORTH] = puzzle.position(x, y - 1);
-          l->neighbours[SOUTH] = puzzle.position(x, y + 1);
-          l->type = VERT;
-          break;
-
-        case '\\':
-          l->isTrack = true;
-          // |
-          // \-
-          predecessor = puzzle.locations[puzzle.position(x, y - 1)];
-          if (predecessor.isTrack &&
-              (predecessor.type == VERT || predecessor.type == JUNCTION)) {
+          case '+':
+            l->isTrack = true;
             l->neighbours[NORTH] = puzzle.position(x, y - 1);
-            l->neighbours[EAST] = puzzle.position(x + 1, y);
-          } else {
-            // -\
-	    //  |
-            assert((puzzle.locations[puzzle.position(x - 1, y)].isTrack));
             l->neighbours[SOUTH] = puzzle.position(x, y + 1);
+            l->neighbours[EAST] = puzzle.position(x + 1, y);
             l->neighbours[WEST] = puzzle.position(x - 1, y);
-          }
-          l->type = TURN_R;
-          break;
+            l->type = JUNCTION;
+            break;
 
-        case '/':
-          l->isTrack = true;
-          l->type = TURN_L;
-          //  |
-          // -/
-          predecessor = puzzle.locations[puzzle.position(x, y - 1)];
-          if (predecessor.isTrack &&
-              (predecessor.type == VERT || predecessor.type == JUNCTION)) {
-            l->neighbours[NORTH] = puzzle.position(x, y - 1);
+          case '-':
+            l->isTrack = true;
+            l->neighbours[EAST] = puzzle.position(x + 1, y);
             l->neighbours[WEST] = puzzle.position(x - 1, y);
-          } else {
-            // /-
+            l->type = HORIZ;
+            break;
+
+          case '|':
+            l->isTrack = true;
+            l->neighbours[NORTH] = puzzle.position(x, y - 1);
+            l->neighbours[SOUTH] = puzzle.position(x, y + 1);
+            l->type = VERT;
+            break;
+
+          case '\\':
+            l->isTrack = true;
             // |
-            // cassert((puzzle.locations[puzzle.position(x, y - 1)].isTrack));
-            l->neighbours[SOUTH] = puzzle.position(x, y + 1);
+            // \-
+            predecessor = puzzle.locations[puzzle.position(x, y - 1)];
+            if (predecessor.isTrack &&
+                (predecessor.type == VERT || predecessor.type == JUNCTION)) {
+              l->neighbours[NORTH] = puzzle.position(x, y - 1);
+              l->neighbours[EAST] = puzzle.position(x + 1, y);
+            } else {
+              // -\ 
+	          //  |
+              assert((puzzle.locations[puzzle.position(x - 1, y)].isTrack));
+              l->neighbours[SOUTH] = puzzle.position(x, y + 1);
+              l->neighbours[WEST] = puzzle.position(x - 1, y);
+            }
+            l->type = TURN_R;
+            break;
+
+          case '/':
+            l->isTrack = true;
+            l->type = TURN_L;
+            //  |
+            // -/
+            predecessor = puzzle.locations[puzzle.position(x, y - 1)];
+            if (predecessor.isTrack &&
+                (predecessor.type == VERT || predecessor.type == JUNCTION)) {
+              l->neighbours[NORTH] = puzzle.position(x, y - 1);
+              l->neighbours[WEST] = puzzle.position(x - 1, y);
+            } else {
+              // /-
+              // |
+              // cassert((puzzle.locations[puzzle.position(x, y - 1)].isTrack));
+              l->neighbours[SOUTH] = puzzle.position(x, y + 1);
+              l->neighbours[EAST] = puzzle.position(x + 1, y);
+            }
+            break;
+
+            // Assume that carts never start on junctions.
+          case '>':
+            c->direction = EAST;
+            c->x = x;
+            c->y = y;
+            puzzle.carts[puzzle.position(x, y)] = c;
+            l->isTrack = true;
             l->neighbours[EAST] = puzzle.position(x + 1, y);
-          }
-          break;
+            l->neighbours[WEST] = puzzle.position(x - 1, y);
+            l->type = HORIZ;
+            cartFound = true;
+            break;
 
-          // Assume that carts never start on junctions.
-        case '>':
-          c->direction = EAST;
-          c->x = x;
-          c->y = y;
-          puzzle.carts[puzzle.position(x, y)] = c;
-          l->isTrack = true;
-          l->neighbours[EAST] = puzzle.position(x + 1, y);
-          l->neighbours[WEST] = puzzle.position(x - 1, y);
-          l->type = HORIZ;
-          cartFound = true;
-          break;
+          case '<':
+            c->direction = WEST;
+            c->x = x;
+            c->y = y;
+            puzzle.carts[puzzle.position(x, y)] = c;
+            l->isTrack = true;
+            l->neighbours[EAST] = puzzle.position(x + 1, y);
+            l->neighbours[WEST] = puzzle.position(x - 1, y);
+            l->type = HORIZ;
+            cartFound = true;
+            break;
 
-        case '<':
-          c->direction = WEST;
-          c->x = x;
-          c->y = y;
-          puzzle.carts[puzzle.position(x, y)] = c;
-          l->isTrack = true;
-          l->neighbours[EAST] = puzzle.position(x + 1, y);
-          l->neighbours[WEST] = puzzle.position(x - 1, y);
-          l->type = HORIZ;
-          cartFound = true;
-          break;
+          case '^':
+            c->direction = NORTH;
+            c->x = x;
+            c->y = y;
+            puzzle.carts[puzzle.position(x, y)] = c;
+            l->isTrack = true;
+            l->neighbours[NORTH] = puzzle.position(x, y - 1);
+            l->neighbours[SOUTH] = puzzle.position(x, y + 1);
+            l->type = VERT;
+            cartFound = true;
+            break;
 
-        case '^':
-          c->direction = NORTH;
-          c->x = x;
-          c->y = y;
-          puzzle.carts[puzzle.position(x, y)] = c;
-          l->isTrack = true;
-          l->neighbours[NORTH] = puzzle.position(x, y - 1);
-          l->neighbours[SOUTH] = puzzle.position(x, y + 1);
-          l->type = VERT;
-          cartFound = true;
-          break;
+          case 'v':
+            c->direction = SOUTH;
+            c->x = x;
+            c->y = y;
+            puzzle.carts[puzzle.position(x, y)] = c;
+            l->isTrack = true;
+            l->neighbours[NORTH] = puzzle.position(x, y - 1);
+            l->neighbours[SOUTH] = puzzle.position(x, y + 1);
+            l->type = VERT;
+            cartFound = true;
+            break;
 
-        case 'v':
-          c->direction = SOUTH;
-          c->x = x;
-          c->y = y;
-          puzzle.carts[puzzle.position(x, y)] = c;
-          l->isTrack = true;
-          l->neighbours[NORTH] = puzzle.position(x, y - 1);
-          l->neighbours[SOUTH] = puzzle.position(x, y + 1);
-          l->type = VERT;
-          cartFound = true;
-          break;
-
-        default:
-        case ' ':
-          l->isTrack = false;
-          l->type = EMPTY;
-          break;
+          default:
+          case ' ':
+            l->isTrack = false;
+            l->type = EMPTY;
+            break;
         }
+
         if (!cartFound) {
           delete c;
         }
@@ -389,14 +359,16 @@ bool tick(Puzzle *puzzle) {
     auto nextLocation = puzzle->locations[currentLocation.neighbours[dir]];
     assert(nextLocation.isTrack);
     cart->nextPosition();
+    int newIndex = puzzle->position(cart->x, cart->y);
     assert((puzzle->location(cart->x, cart->y) == nextLocation));
-    if (puzzle->carts.count(puzzle->position(cart->x, cart->y)) ==
-        1) { // Collision before other car moved.
+    if (puzzle->carts.count(newIndex) ==
+        1) {  // Collision before other car moved.
       crashed = true;
       std::cout << "Crash at: " << cart->x << ", " << cart->y << "\n";
-      puzzle->carts[puzzle->position(cart->x, cart->y)]->crashed = true;
+      puzzle->carts[newIndex]->crashed = true;
+      delete cart;
     } else {
-      cartsByPosition[puzzle->position(cart->x, cart->y)].insert(cart);
+      cartsByPosition[newIndex].insert(cart);
     }
   }
 
@@ -408,7 +380,9 @@ bool tick(Puzzle *puzzle) {
   for (auto [pos, cs] : cartsByPosition) {
     if (cs.size() == 1) {
       auto c = *cs.begin();
-      puzzle->carts[pos] = c;
+      if (!c->crashed) {
+        puzzle->carts[pos] = c;
+      }
     } else {
       crashed = true;
       auto c = *cs.begin();
@@ -427,8 +401,9 @@ int main() {
   auto puzzle = readSequence();
   puzzle.print();
   int i = 0;
-  while (!tick(&puzzle)) {
-    // puzzle.print();
+  while (!tick(&puzzle) && i < 200) {
+    puzzle.print();
     std::cout << "Iteration " << ++i << " completed.\n";
   }
+  puzzle.print();
 }
