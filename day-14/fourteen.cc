@@ -2,7 +2,7 @@
 #include <list>
 #include <vector>
 
-void step(std::list<short> *input, std::list<short>::iterator &elfOne,
+int step(std::list<short> *input, std::list<short>::iterator &elfOne,
           std::list<short>::iterator &elfTwo) {
   int sum = *elfOne + *elfTwo;
   int oneAdvance = 1 + *elfOne;
@@ -26,6 +26,8 @@ void step(std::list<short> *input, std::list<short>::iterator &elfOne,
       elfTwo = input->begin();
     }
   }
+
+  return sum/10;
 }
 
 std::pair<int, int> step(std::vector<short> &input, int elfOne, int elfTwo) {
@@ -90,11 +92,12 @@ void partTwo(std::list<short> input, int target) {
 
   auto targetVector = digits(target);
   int iterations = 0;
+  int removeLast;
   while (!endsWith(&input, &targetVector, true) && !endsWith(&input, &targetVector, false)) {
-    step(&input, elfOne, elfTwo);
+    removeLast = step(&input, elfOne, elfTwo);
   }
 
-  std::cout << "Prior recipes: " << (input.size() - targetVector.size())
+  std::cout << "Prior recipes: " << (input.size() - targetVector.size() - removeLast)
             << "\n";
 }
 
@@ -106,6 +109,7 @@ int main() {
   partOne(input, 637061);
 
   partTwo(inputList, 51589);
+  partTwo(inputList, 1245);
   partTwo(inputList, 92510);
   partTwo(inputList, 59414);
 
