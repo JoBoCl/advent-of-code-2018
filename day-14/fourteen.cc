@@ -66,9 +66,12 @@ std::vector<short> digits(int value) {
   return v;
 }
 
-bool endsWith(std::list<short> *sequence, std::vector<short> *target) {
+bool endsWith(std::list<short> *sequence, std::vector<short> *target, bool skipFirst) {
   auto seqIt = sequence->rbegin();
   auto targIt = target->begin();
+  if (skipFirst) {
+    seqIt++;
+  }
   while (seqIt != sequence->rend() && targIt != target->end()) {
     if (*seqIt != *targIt) {
       return false;
@@ -79,14 +82,6 @@ bool endsWith(std::list<short> *sequence, std::vector<short> *target) {
   return target->end() == targIt;
 }
 
-template<typename T>
-std::ostream& operator<<(std::ostream& s, const std::list<T>& v) {
-    for (const auto& e : v) {
-        s << e;
-    }
-    return s << '\n';
-}
-
 
 void partTwo(std::list<short> input, int target) {
   auto elfOne = input.begin();
@@ -95,13 +90,8 @@ void partTwo(std::list<short> input, int target) {
 
   auto targetVector = digits(target);
   int iterations = 0;
-
-  while (!endsWith(&input, &targetVector)) {
+  while (!endsWith(&input, &targetVector, true) && !endsWith(&input, &targetVector, false)) {
     step(&input, elfOne, elfTwo);
-    if (iterations < 5) {
-      std::cout << input;
-      iterations++;
-    }
   }
 
   std::cout << "Prior recipes: " << (input.size() - targetVector.size())
