@@ -67,7 +67,7 @@ int adjacent(std::vector<std::vector<Acre>> *area, int x, int y, Acre type) {
   return count;
 }
 
-void step(std::vector<std::vector<Acre>> &area) {
+int step(std::vector<std::vector<Acre>> &area) {
   int width = (area)[0].size();
   int height = area.size();
 
@@ -109,11 +109,70 @@ void step(std::vector<std::vector<Acre>> &area) {
     next.push_back(row);
   }
   area = next;
+
+  int wood = 0;
+  int lumber = 0;
+  for (auto row : area) {
+    for (auto land : row) {
+      switch (land) {
+        case WOOD:
+          wood++;
+          break;
+        case LUMBER:
+          lumber++;
+          break;
+        case EMPTY:
+          break;
+      }
+    }
+  }
+
+  return wood * lumber;
+}
+
+std::pair<int, int> matchFound(std::vector<int> &sequence, int minMatches) {
+  int matches = 0;
+  auto it = sequence.begin();
+  auto it2 = sequence.end();
+  it2--;
+
+  while (it != it2) {
+    if (*it != *it2) {
+      it++;
+    } else {
+      assert(it != it2);
+      do {
+        matches++;
+        it--;
+        it2--;
+      } while (matches < minMatches && *it == *it2);
+      if (matches >= minMatches) {
+        return std::make_pair(std::distance(sequence.begin(), it),
+                              std::distance(it, it2));
+      } else {
+        it2 = sequence.end();
+        it2--;
+      }
+    }
+  }
+
+  return std::make_pair(-1, 0);
 }
 
 void partOne(std::vector<std::vector<Acre>> puzzle) {
-  for (int i = 0; i < 10; i++) {
-    step(puzzle);
+  std::vector<int> sequence;
+  int minMatches = 20;
+  int limit = 1000000000;
+  for (int i = 0; i < limit; i++) { // We may need to continue until the end.
+    sequence.push_back(step(puzzle));
+    std::pair<int, int> result = matchFound(sequence, minMatches);
+    if (result.first != -1) {
+      int loopLength = result.second;
+      int loopStartIndex = result.first;
+      int index = (limit - loopStartIndex) % loopLength;
+      std::cout << "Resource value after " << limit << " minutes: " << sequence[index] << "\n";
+      return;
+    }
   }
 
   int wood = 0;
