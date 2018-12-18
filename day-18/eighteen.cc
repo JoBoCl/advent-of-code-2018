@@ -67,6 +67,19 @@ int adjacent(std::vector<std::vector<Acre>> *area, int x, int y, Acre type) {
   return count;
 }
 
+void print (std::vector<std::vector<Acre>> &area) {
+  for (auto row : area) {
+    for(auto c : row) {
+      switch (c) {
+        case EMPTY: std::cout<<'.';break;
+        case WOOD: std::cout<<'|';break;
+        case LUMBER: std::cout<<'#';break;
+      }
+    }
+    std::cout<<"\n";
+  }
+}
+
 int step(std::vector<std::vector<Acre>> &area) {
   int width = (area)[0].size();
   int height = area.size();
@@ -136,7 +149,7 @@ std::pair<int, int> matchFound(std::vector<int> &sequence, int minMatches) {
   auto it2 = sequence.end();
   it2--;
 
-  while (it != it2) {
+  while (it != it2 && it != sequence.end()) {
     if (*it != *it2) {
       it++;
     } else {
@@ -165,12 +178,26 @@ void partOne(std::vector<std::vector<Acre>> puzzle) {
   int limit = 1000000000;
   for (int i = 0; i < limit; i++) { // We may need to continue until the end.
     sequence.push_back(step(puzzle));
+    
+    print(puzzle);
+
     std::pair<int, int> result = matchFound(sequence, minMatches);
-    if (result.first != -1) {
+    if (false && result.first != -1) {
       int loopLength = result.second;
       int loopStartIndex = result.first;
       int index = (limit - loopStartIndex) % loopLength;
-      std::cout << "Resource value after " << limit << " minutes: " << sequence[index] << "\n";
+      int current = i;
+      while (current + loopLength < limit) {
+        current += loopLength;
+      }
+      int offset = loopLength - (limit - current);
+
+      std::cout << "Loop found at " << loopStartIndex << " with length: " << loopLength << "\n";
+      for (auto v : sequence) {
+        std::cout << v << ", ";
+      }
+      std::cout <<"\n";
+      std::cout << "Resource value after " << limit << " minutes: " << sequence[loopStartIndex + offset] << "\n";
       return;
     }
   }
